@@ -7,18 +7,23 @@ import { Server } from 'socket.io'
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
+import mongoose from 'mongoose';
 
-
+// Routers Import
 import viewsRouter from './routes/views.router.js';
 import productsRouter from './routes/products.router.js';
 import cartsRouter from './routes/carts.router.js';
 import messagesRouter from './routes/messages.router.js';
 import authRouter from './routes/auth.router.js';
 
+// Managers Import
 import { messagesManager } from './dao/manager/messages.manager.js';
 import { userManager } from './dao/manager/users.manager.js'
 import { productsManager } from './dao/manager/products.manager.js';
 import { cartsManager } from './dao/manager/carts.manager.js';
+
+// Middleware Import
+import checkSession from './middlewares/auth.middleware.js';
 
 const app = express();
 
@@ -27,16 +32,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-const URI = 'mongodb+srv://sczfranco:eKJpl0PNLwq3JxVB@codercluster.fapa9ve.mongodb.net/ecommerce?retryWrites=true&w=majority'
-app.use( session({
+const URI = 'mongodb+srv://sczfranco:eKJpl0PNLwq3JxVB@codercluster.fapa9ve.mongodb.net/session?retryWrites=true&w=majority'
+app.use(session({
     secret: "SECRETKEY",
     cookie: {
         maxAge: 5 * 60 * 1000
     },
-    store : new MongoStore({
+    store: new MongoStore({
         mongoUrl: URI
     })
-}) )
+}))
+
+
+
+// Middleware global
+app.use(checkSession)
 
 
 // Handlebars
@@ -62,27 +72,11 @@ app.use('/api/auth', authRouter);
 // ----------------------------- WebSocket ------------------------------------
 socketServer.on("connection", (socket) => {
 
-
     // -------------------------USER SOCKET--------------------------------
     let userFound
-    socket.on("newUser", async (user) => {
-
-        userFound = await userValidator(user[1])
-        if (!userFound) {
-            const cart = await cartsManager.createOne({})
-            let obj = {
-                name: user[0],
-                email: user[1],
-                password: user[2],
-                cart: cart._id
-            }
-            userFound = await userManager.createOne(obj)
-            socket.broadcast.emit("newUserBroadcast", user[0])
-        } else {
-            // No hago uso de createOne porque el usuario ya existe
-            // Pero si hago el emit siguiendo el flujo del websocket
-            socket.broadcast.emit("newUserBroadcast", userFound)
-        }
+    socket.on("userJoin", async (user) => {
+        userFound = await userValidator(user.email)
+        socket.broadcast.emit("newUserBroadcast", userFound)
     })
     // -------------------------------------------------------------
 
@@ -99,20 +93,20 @@ socketServer.on("connection", (socket) => {
                 }
             ]
         }
-
         // Valido si el chat existe en la DB
-        let chatFound = await chatValidator(info.id)
+        let chatFound = await chatValidator(info.cid)
         // Si no existe, crea un nuevo chat con el mensaje nuevo.
         // Si existe el chat, agrega a ese chat los mensajes.
-        if(!chatFound){
-            messagesManager.createOne(obj)
-            // socketServer.emit("chat", obj);
+        if (!chatFound) {
+            await messagesManager.createOne(obj)
+            
         } else {
-            chatFound.chats = [ ...chatFound.chats, ...obj.chats]
-            messagesManager.updateOne(info.id, chatFound)
+            chatFound.chats = [...chatFound.chats, ...obj.chats]
+            await messagesManager.updateOne(info.cid, chatFound)
         }
-        const chat = await messagesManager.findByID(info.id)
-        socketServer.emit("chat", chat);
+
+        const chat = await messagesManager.findByID(info.cid)
+        socketServer.emit("chat", chat.chats);
     })
     // ----------------------------------------------------------------------
 
@@ -125,17 +119,32 @@ socketServer.on("connection", (socket) => {
         socketServer.emit("allProducts", products)
     })
 
+    socket.on("addCart", async (obj) => {
+        const {product_id, cart_id} = obj
+        
+        const x = await cartsManager.addProdToCart(cart_id, product_id)
+        console.log("----------------------")
+        console.log("X")
+        console.log(x);
+        console.log("----------------------")
 
+        const cartProducts = await cartsManager.findByID(cart_id)
+        console.log("----------------------")
+        console.log("cartPorducts.cart")
+        console.log(cartProducts.cart);
+        console.log("----------------------")
+        socket.emit('cartProducts', cartProducts.cart)
+    })
 })
 
 async function userValidator(email) {
-    const obj = {email:email}
+    const obj = { email: email }
     const user = await userManager.findByField(obj)
     return user
 }
 
 async function chatValidator(id) {
-    const obj = {_id:id}
+    const obj = { _id: id }
     const chat = await messagesManager.findByField(obj)
     return chat
 }

@@ -17,7 +17,7 @@ class MessagesManager {
         return messagesModel.deleteOne({_id: id})
     }
     async findByField(obj){
-        const res = await messagesModel.findOne(obj)
+        const res = await messagesModel.findOne(obj).populate('chats.autor').lean()
         return res
     }
 }

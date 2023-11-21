@@ -53,7 +53,6 @@
         <h1>Catálogo de Productos</h1>
         <hr>
         <div id="show_products_list" class="show_products __list">
-
             {{#each products}}
             <div>
                 <h2>{{this.title}}</h2>
@@ -66,11 +65,25 @@
                 <hr>
             </div>
             <div class="prod_btns">
-                <button type="submit">ADD TO CART</button>
-                <button type="submit">SHOW DETAILS</button>
+                <form id="addCartForm">
+                    <input type="hidden" name="product_id" value="{{this._id}}">
+                    <input type="hidden" name="cart_id" value="{{@root.cart_id}}">
+                    <button type="submit">ADD TO CART</button>
+                </form>
+                <form action="product/{{this._id}}" method="get" id="productDetailsForm">
+                    <button type="submit">SHOW DETAILS</button>
+                </form>
             </div>
             {{/each}}
         </div>
+    </section>
+
+    <section>
+        <h1>{{user}} CART</h1>
+        <div id="cartList">
+        
+        </div>
+
     </section>
 </div>
 
@@ -79,27 +92,3 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/product.js"></script>
-
-
-
-
-{{!-- <section class="show_products __container">
-    <h1>Catálogo de Productos</h1>
-    {{#if products}}
-    {{#each products}}
-    <hr>
-    <div>
-        <h2>{{title}}</h2>
-        <h3>{{description}}</h3>
-        <p>${{price}} | Cantidad disponible: {{stock}}</p>
-        {{#if status}}
-        <p>Disponible</p>
-        {{else}}
-        <p>No disponible</p>
-        {{/if}}
-    </div>
-    {{/each}}
-    {{else}}
-    <h1>NO HAY PRODUCTOS DISPONIBLES</h1>
-    {{/if}}
-</section> --}}

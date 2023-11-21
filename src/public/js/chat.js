@@ -5,34 +5,19 @@ const chatForm = document.getElementById("chatForm");
 const chatMessage = document.getElementById("chatMessage");
 const chat = document.getElementById("chat");
 
-// const chat_id = document.getElementById("chat_id");
-
-Swal.fire({
-    title: "Bienvenidx!",
-    html:
-        '<br><label>Name</label>'+
-        '<input id="swal-input1" class="swal2-input">' +
-        '<br><label>Email</label>'+
-        '<input id="swal-input2" class="swal2-input">' +
-        '<br><label>Password</label>'+
-        '<input id="swal-input3" class="swal2-input">',
-    focusConfirm: false,
-    preConfirm: () => {
-        return [
-          document.getElementById('swal-input1').value,
-          document.getElementById('swal-input2').value,
-          document.getElementById('swal-input3').value
-        ]
-      }
-    
-}).then(input => {
-    user = input.value
-    username.innerText = input.value[0]
-    socketClient.emit("newUser", user)
+fetch('/api/auth/', {
+    method: 'GET',
+    credentials: 'include'
 })
+    .then(res => res.json())
+    .then(data => {
+        socketClient.emit("userJoin", data)
+    })
+    .catch(error => console.error(error))
+
 socketClient.on('newUserBroadcast', (user) => {
     Toastify({
-        text: `${user.name} se ha conectado`,
+        text: `${user.first_name} se ha conectado`,
         duration: 5000,
         newWindow: true,
         close: true,
@@ -47,15 +32,12 @@ socketClient.on('newUserBroadcast', (user) => {
 
 chatForm.onsubmit = (e) => {
     e.preventDefault();
-    // let aux = chat_id.textContent.split(':')
-    // const cid = aux[1].trim()
 
-    // handlebars check
     const cid = chatForm.dataset.chat
-    socketClient.emit("message", {message: chatMessage.value, id: cid});
+    socketClient.emit("message", { message: chatMessage.value, cid: cid });
 }
 
 socketClient.on('chat', (messages) => {
-    const chatMsg = messages.chats.map( (msg) => `<p>${msg.autor.name}: ${msg.content}</p>` ).join(" ");
+    const chatMsg = messages.map((msg) => `<p>${msg.autor.first_name}: ${msg.content}</p>`).join(" ");
     chat.innerHTML = chatMsg;
 })

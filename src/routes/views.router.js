@@ -23,16 +23,30 @@ router.get('/signup', async (req, res) => {
 // No puedo implementar Paginate a websocket
 router.get('/productsWS', async (req, res) => {
     const products = await productsManager.findAll()
-    // console.log(products);
-    res.render('productsWS', { products: products, style: "products"})
+    const cart = req.session.cart;
+    res.render('productsWS', { 
+        products: products, 
+        style: "products",
+        cart_id : cart
+    })
 })
 
 // View de products con paginate pero sin websocket
 router.get('/products', async (req, res) => {
     const products = await productsManager.findAllPg(req.query)
     
+    const cart_id = req.session.cart
+    const first_name = req.session.first_name
+    const cart = await cartsManager.findByID(cart_id)
     const obj = JSON.parse(JSON.stringify(products))
-    res.render('products', { products: obj.payload, style: "products", info: obj})
+    res.render('products', { 
+        products: obj.payload, 
+        style: "products", 
+        info: obj, 
+        cart_id: cart_id, 
+        user: first_name,
+        cart: cart.cart
+    })
 }) 
 
 router.get('/product/:pid', async (req, res) => {

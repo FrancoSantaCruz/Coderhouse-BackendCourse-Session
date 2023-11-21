@@ -105,40 +105,7 @@ class CartsManager extends Manager {
             return error
         }
     }
-    /*
-    async deleteProdFromCart(cid, pid) {
-        try {
-            const cart = await this.findByID(cid);
-            if (!cart) {
-                throw new Error("Cart not found");
-            }
-            const product = cart.products.find(
-                (product) => product.productId === pid
-            );
-            if (!product) {
-                throw new Error("This product doesn't exists.");
-            }
-            if (product.quantity > 1) {
-                let arr = cart.products.map(objeto => {
-                    if (objeto.productId === pid) {
-                        objeto.quantity--;
-                    }
-                    return { ...objeto };
-                });
-                cart.products = arr
-            } else {
-                cart.products = cart.products.filter(
-                    (product) => product.productId !== pid
-                );
-            }
-            const res = await this.updateOne(cid, cart)
-            return "Product deleted";
-        } catch (error) {
-            return error
-        }
-    }
-    */
-
+    
 }
 
 export const cartsManager = new CartsManager();

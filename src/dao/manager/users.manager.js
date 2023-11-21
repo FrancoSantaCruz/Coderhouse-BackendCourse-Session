@@ -7,7 +7,7 @@ class UsersManager extends Manager{
     }
 
     async findByField(obj){
-        const res = await this.model.findOne(obj)
+        const res = await this.model.findOne(obj).lean()
         return res
     }
 }

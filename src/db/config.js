@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-const URI = 'mongodb+srv://sczfranco:eKJpl0PNLwq3JxVB@codercluster.fapa9ve.mongodb.net/ecommerce?retryWrites=true&w=majority'
+const URI = 'mongodb+srv://sczfranco:eKJpl0PNLwq3JxVB@codercluster.fapa9ve.mongodb.net/session?retryWrites=true&w=majority'
 
 mongoose
     .connect(URI)

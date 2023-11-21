@@ -1,17 +1,22 @@
 import { Schema, model } from "mongoose";
 
 const userSchema = new Schema({
-    name: {
+    first_name: {
         type: String,
-        require: true
+        required: true
+    },
+    last_name: {
+        type: String,
+        required: true
     },
     email: {
         type: String,
-        require: true,
+        required: true,
         unique: true
     },
     password: {
-        type: String
+        type: String,
+        required: true
     },
     cart: {
         type: Schema.Types.ObjectId,
